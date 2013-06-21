@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
+    <title>Chat test</title>
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet" media="screen">
+    <script src="js/vmchatter.js"></script>
+
+    <script>
+        function Example2Chatter(host, port, params)
+        {
+            this.chatter = new VMChatter(host, port, 'example2', params, this);
+        }
+
+        //Order of arguments can be different with server realisation
+        Example2Chatter.prototype.hello = function(text2, text1, text3, callback)
+        {
+            this.chatter.applyMethod('hello', 'world', arguments);
+        };
+    </script>
+
+    <script type="text/javascript">
+        var sx;
+
+        $(document).ready(function()
+        {
+            sx = new Example2Chatter('localhost', 8888, {
+                'onOpen': function(){
+                    console.log('Connected');
+
+                    //This is how we subscribe on events
+                    sx.chatter.eventSubscribe('test', 'event1', {}, function(data, success)
+                    {
+                        //Callback will be called only when you call it on the server
+                        console.warn(data);
+                        $('#results').append('<p><b>Broadcast:</b> Event 1</p>');
+                    });
+
+                    sx.chatter.eventSubscribe('test', 'event2', {}, function(data, success)
+                    {
+                        console.warn(data);
+                        $('#results').append('<p><b>Non-Broadcast (only for me):</b> Event 2</p>');
+                    });
+                },
+                'onClose': function(){
+                    console.log('Disconnected');
+                }
+            });
+        });
+
+        function sendHello()
+        {
+            sx.hello('test2', 'test1', 'test3', function(data, success)
+            {
+                $('#results').append('<p>' + data.text + '</p>');
+            });
+        }
+    </script>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span4 well">
+            <h4>Open this page in (for ex.) 3 tabs</h4>
+            <button class="btn" onclick="sendHello();">Send hello</button>
+            <div id="results"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

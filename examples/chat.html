@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
+    <title>Chat test</title>
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet" media="screen">
+    <script src="js/vmchatter.js"></script>
+
+    <script>
+        function ChatChatter(host, port, params)
+        {
+            this.chatter = new VMChatter(host, port, 'chat', params, this);
+        }
+
+        ChatChatter.prototype.auth = function(username, password, callback)
+        {
+            this.chatter.applyMethod('user', 'auth', arguments);
+        };
+
+        ChatChatter.prototype.getUsers = function(callback)
+        {
+            this.chatter.applyMethod('user', 'users', arguments);
+        };
+
+        ChatChatter.prototype.sendMessage = function(message, callback)
+        {
+            this.chatter.applyMethod('user', 'message', arguments);
+        };
+
+        ChatChatter.prototype.sendPrivateMessage = function(username, message, callback)
+        {
+            this.chatter.applyMethod('user', 'private_message', arguments);
+        };
+
+        ChatChatter.prototype.updateSystem = function(key, callback)
+        {
+            this.chatter.applyMethod('system', 'update', arguments);
+        };
+    </script>
+
+    <script type="text/javascript">
+        var sx;
+        var isFirst = true;
+        var users = {};
+        var chatter_host = 'localhost';
+        var chatter_port = 8888;
+        var update_system_key = 'testtest123';
+
+        function createSocket()
+        {
+            sx = new ChatChatter(chatter_host, chatter_port, {
+                'onClose': function()
+                {
+                    if(isFirst)
+                    {
+                        $('#login_error').html('Сервер не отвечает');
+                        isFirst = false;   
+                    }
+                    $('#main').hide();
+                    $('#login').fadeIn();
+                }
+            });
+        }
+
+        function auth(nickname)
+        {
+            sx.auth(nickname, 'test', function(data, success)
+            {
+                if(success)
+                {
+                    $('#login').hide();
+                    $('#main').fadeIn();
+
+                    this.chatter.eventSubscribe('chat', 'users', {}, function(data)
+                    {
+                        users = {};
+                        for(var k in data.params.users)
+                        {
+                            users[data.params.users[k]] = true;
+                        }
+                        updateUsers();
+                    });
+
+                    this.chatter.eventSubscribe('chat', 'message', {}, function(data)
+                    {
+                        $('#chat_messages').append('<div><p><b>' + data.params.user + ':</b> ' + data.params.message + '</p></div>')
+                    });
+
+                    this.chatter.eventSubscribe('user', 'on', {}, function(data)
+                    {
+                        users[data.params.user] = true;
+                        updateUsers();
+                    });
+
+                    this.chatter.eventSubscribe('user', 'off', {}, function(data)
+                    {
+                        users[data.params.user] = false;
+                        updateUsers();
+                    });
+
+                    this.getUsers();
+                }else
+                {
+                    $('#login_error').html('Логин занят');
+                    createSocket();
+                }
+            });
+        }
+
+        function logout()
+        {
+            sx.chatter.ws.close();
+        }
+
+        function updateUsers()
+        {
+            $('#chat_users').html('');
+            var i = 0;
+            for(var user in users)
+            {
+                if(!users[user])
+                {
+                    continue;
+                }
+                i += 1;
+                $('#chat_users').append('<p>🐙 ' + user + '</p>');
+            }
+            $('#chat_users_num').html(' (' + i + ')');
+        }
+
+        function updateSystem()
+        {
+            sx.updateSystem(update_system_key, function(data, success)
+            {
+                console.warn('System updated');
+            });
+        }
+
+        $(document).ready(function()
+        {
+            createSocket();
+        });
+    </script>
+</head>
+<body>
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container-fluid">
+            <h4>Super mega epic chat</h4>
+        </div>
+    </div>
+</div>
+<div id="login" class="container-fluid">
+    <div class="span4 well">
+        <h4>Login:</h4>
+        <p class="badge" id="login_error"></p>
+        <p><input style="width: 90%;" type="text" onkeydown="if(event.keyCode == 13){ auth(this.value); this.value = ''; }" />
+    </div>
+</div>
+<div id="main" class="container-fluid" style="display: none;">
+    <div class="row-fluid">
+        <div class="span9 well">
+            <h4>Chat here:</h4>
+            
+            <div id="chat_messages" style="padding-bottom: 20px;"></div>
+
+            <p><input style="width: 100%;" type="text" onkeydown="if(event.keyCode == 13){ sx.sendMessage(this.value); this.value = ''; }" />
+
+            <p class="pull-right">
+                <button class="btn" onclick="updateSystem()">Update system</button>
+                <button class="btn" onclick="logout()">Logout</button>
+            </p>
+        </div>
+        <div class="span3 well">
+            <h4>Users in chat<span id="chat_users_num"></span>:</h4>
+            <div id="chat_users"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

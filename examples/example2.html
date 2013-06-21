@@ -38,13 +38,13 @@
                     {
                         //Callback will be called only when you call it on the server
                         console.warn(data);
-                        $('#results').append('<p><b>Broadcast:</b> Event 1</p>');
+                        $('#results').append('<p><b>Non-Broadcast (only for me):</b> Event 1</p>');
                     });
 
                     sx.chatter.eventSubscribe('test', 'event2', {}, function(data, success)
                     {
                         console.warn(data);
-                        $('#results').append('<p><b>Non-Broadcast (only for me):</b> Event 2</p>');
+                        $('#results').append('<p><b>Broadcast:</b> Event 2</p>');
                     });
                 },
                 'onClose': function(){

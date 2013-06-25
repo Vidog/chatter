@@ -657,7 +657,7 @@ class WebSocketApp(object):
     """
     def __init__(self, url,
                  on_open = None, on_message = None, on_error = None, 
-                 on_close = None, keep_running = True, get_mask_key = None):
+                 on_close = None, keep_running = True, get_mask_key = None, protocol = None):
         """
         url: websocket url.
         on_open: callable object which is called at opening websocket.
@@ -677,6 +677,7 @@ class WebSocketApp(object):
        get_mask_key: a callable to produce new mask keys, see the WebSocket.set_mask_key's
          docstring for more information
         """
+        self.protocol = protocol
         self.url = url
         self.on_open = on_open
         self.on_message = on_message
@@ -708,7 +709,7 @@ class WebSocketApp(object):
             raise WebSocketException("socket is already opened")
         try:
             self.sock = WebSocket(self.get_mask_key)
-            self.sock.connect(self.url)
+            self.sock.connect(self.url, protocol=self.protocol)
             self._run_with_no_err(self.on_open)
             while self.keep_running:
                 data = self.sock.recv()

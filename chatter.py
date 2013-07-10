@@ -130,9 +130,6 @@ class BaseSocketHandler(tornado.websocket.WebSocketHandler):
         self.authorized = False
         self.username = ''
         self.password = ''
-        self.state = 0
-        self.current_task = False
-        self.hold_state = False
         self.ws = None
         self.events = {}
         self.APIStruct = {}
@@ -244,7 +241,7 @@ class BaseSocketHandler(tornado.websocket.WebSocketHandler):
                                     'APIMethod': APIMethod,
                                     'Events': Events,
                                     'Clients': Clients,
-                                    'Tasks': Tasks,
+                                    'ENVGlobals': ENVGlobals,
                                     'md5': md5,
                                     'sha1': sha1
                                 }
@@ -352,4 +349,4 @@ def run_application(handlers):
 
 Events = APIEvents()
 Clients = {}
-Tasks = {}
+ENVGlobals = {}

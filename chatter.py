@@ -212,8 +212,8 @@ class BaseSocketHandler(tornado.websocket.WebSocketHandler):
 
     def loadAPIStruct(self):
         struct = {'system_groups': {}}
-
-        api_dir = './api/'
+        app_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        api_dir = app_dir + '/api/'
         dr = os.listdir(api_dir)
         for fl in dr:
             if os.path.isdir(api_dir + fl):
